@@ -1,0 +1,206 @@
+options:
+    unit.x: 1
+    unit.y: 1
+    screen.x: 1920
+    screen.y: 1080
+    id: hud_
+
+#https://displayhud.gitbook.io/displayhud-docs/
+
+    
+function addHud(p: entity, id: string, location: vector, scale: vector, object: object, aligned: textalignment=center aligned, textaligned: textalignment=left aligned):: entity:
+    kill getHud({_p}, {_id})
+    spawn (text display if {_object} is text otherwise item display) at {_p}
+    set {_e} to last spawned entity
+    add {_e} to {_p}'s passengers
+    set (yaw of {_e}) and (pitch of {_e}) to 0
+    set metadata tag "id" of {_e} to {_id} #자신 아이디 확인용
+    set metadata tag "hud" of {_e} to true #허드인지 구분용
+    set metadata tag "location" of {_e} to {_location}
+    set metadata tag "scale" of {_e} to {_scale}
+
+    set metadata tag "{@id}%{_id}%" of {_p} to {_e} #주인과 허드 다이렉트
+    hide {_e} from all players where [input is not {_p}] if {_p} is a player
+    set metadata tag "aligned" of {_e} to 10000 if {_aligned} is left aligned
+    set metadata tag "aligned" of {_e} to 20000 if {_aligned} is center aligned
+    set metadata tag "aligned" of {_e} to 30000 if {_aligned} is right aligned
+    if {_e} is text display:
+        set text of {_e} to "%" " repeated 200 times%%nl%%{_object}%"
+        set text alignment of {_e} to {_textaligned}
+        rotateHud({_e}, vector(0,0,0))
+    else:
+        set item of {_e} to {_object}
+    set light override of {_e} to 15
+    set display scale of {_e} to getScaleVector({_scale})
+    moveHud({_e}, {_location})
+    return {_e}
+
+
+function moveHud(p: entity, id: string, location: vector, t: integer=0):
+    moveHud(getHud({_p}, {_id}), {_location}, integer in {_t})
+function moveHud(e: entity, location: vector, t: integer=0):
+    set display translation of {_e} to getLocationVector({_location}, getHudScale({_e}), {_e})
+    remove (metadata tag "aligned" of {_e}) from y of (display translation of {_e})
+    set metadata tag "location" of {_e} to {_location}
+    set interpolation delay of {_e} to 0 tick
+    set interpolation duration of {_e} to "%{_t}% tick" parsed as timespan
+
+
+function getLocationVector(v: vector, scale: vector=vector(0,0,0), e: entity={_}):: vector:
+    if {_e} is text display:
+        set {_text} to text of {_e}
+        set {_alignemnt} to text alignment of {_e}
+        remove {_scale}.y/2 from {_offset.y}
+        add ({_scale}.y/4) * ((size of ({_text} split at nl))-1) to {_offset.y}
+        set {_offset.x} to ({_scale}.x)*2 if {_alignemnt} is left aligned
+        set {_offset.x} to ({_scale}.x)*-3.05 if {_alignemnt} is right aligned
+        set x of {_scale} to 0 if {_alignemnt} is center aligned
+    else if item of {_e} is block:
+        set {_offset.z} to (z of {_scale})/2
+    else:
+        set {_offset.z} to (z of {_scale})/32
+    set {_x} to (({@screen.x}/2)-(x of {_v})+((x of {_scale})/-2)-{_offset.x})*{@unit.x}
+    set {_y} to -15000.178+((({@screen.y}/2)-(y of {_v})-((y of {_scale})/2)-{_offset.y})*{@unit.y})
+    set {_z} to ({@unit.x}*{_offset.z})-((z of {_v})*100)
+    return vector({_x}, {_y}, {_z}) 
+function getScaleVector(v: vector):: vector:
+    return vector({@unit.x}*(x of {_v}), ({@unit.y}*(y of {_v})), ({@unit.x}*(z of {_v})))
+
+function moveHuds(p: entity, origin: string, passengers: entities, location: vector, t: integer=0): #id, entities
+    moveHuds({_origin}, getHuds({_p}, {_passnegers::*}), {_location}, {_t})
+
+function moveHuds(p: entity, origin: string, passengers: strings, location: vector, t: integer=0): #id, ids
+    moveHuds(getHud({_p}, {_origin}), getHuds({_p}, {_passnegers::*}), {_location}, {_t})
+
+function moveHuds(origin: entity, passengers: strings, location: vector, t: integer=0): #entity,  ids
+    moveHuds({_origin}, getHuds({_p}, {_passnegers::*}), {_location}, {_t})
+
+function moveHuds(origin: entity, passengers: entities, location: vector, t: integer=0): #entity, entities
+    set {_offset} to {_location} - getHudLocation({_origin})
+    set z of {_offset} to 0
+    loop {_passengers::*} and {_origin}:
+        offsetMoveHud(loop-value, vector in {_offset}, integer in {_t})
+
+
+
+function offsetMoveHud(p: entity, id: string, offset: vector, t: integer=0):
+    offsetMoveHud(getHud({_p}, {_id}), vector in {_offset}, {_t})
+function offsetMoveHud(e: entity, offset: vector, t: integer=0):
+    set {_location} to getHudLocation({_e}) + {_offset}
+    moveHud({_e}, {_location}, integer in {_t})
+
+
+
+
+
+function setHudScale(p: entity, id: string, scale: vector, t: integer=0, isCenter: boolean=false):
+    setHudScale(getHud({_p}, {_id}), {_scale}, integer in {_t}, {_isCenter})
+function setHudScale(e: entity, scale: vector, t: integer=0, isCenter: boolean=false):
+    set {_originalLocation} to getHudLocation({_e})
+    set display scale of {_e} to getScaleVector({_scale})
+    set metadata tag "scale" of {_e} to {_scale}
+    if {_isCenter} is false:
+        moveHud({_e}, {_originalLocation}, integer in {_t})
+    else:
+        set interpolation delay of {_e} to 0 tick
+        set interpolation duration of {_e} to "%{_t}% tick" parsed as timespan
+
+
+
+function getHudText(p: entity, id: string, line: integer={_}):: string:
+    return getHudText(getHud({_p}, {_id}), integer in {_line})
+function getHudText(e: entity, line: integer={_}):: string:
+    set {_t} to text of {_e}
+    set {_text} to subtext of {_t} from ((line width of {_e})+2) to length of {_t}
+    if {_line} is set:
+        return {_line}th element of ({_text} split at nl)
+    else:
+        return {_text}
+
+
+function setHudText(p: entity, id: string, text: string, line: integer={_}):
+    setHudText(getHud({_p}, {_id}), {_text}, integer in {_line})
+function setHudText(e: entity, text: string, line: integer={_}):
+    if {_line} is set:
+        set {_t} to getHudText({_e})
+        set {_return} to ""
+        loop {_t} split at nl:
+            set {_return} to "%{_return}%%nl%" if {_return} is not ""
+            if loop-iteration is {_line}:
+                set {_return} to "%{_return}%%{_text}%"
+            else:
+                set {_return} to "%{_return}%%loop-value%"
+            if next loop-value is not set:
+                loop-iteration < {_line}
+                loop {_line} - loop-iteration times:
+                    set {_return} to "%{_return}%%nl%"
+                set {_return} to "%{_return}%%{_text}%"
+                set {_over} to true
+        set text of {_e} to "%" " repeated (line width of {_e}) times%%nl%%{_return}%"
+        moveHud({_e}, getHudLocation({_e})) if {_over} is true
+    else:
+        set text of {_e} to "%" " repeated (line width of {_e}) times%%nl%%{_text}%"
+
+
+
+function rotateHud(p: entity, id: string, rotate: vector, t: integer=0, dir: direction=right):
+    rotateHud(getHud({_p}, {_id}), {_rotate}, integer in {_t}, {_dir})
+function rotateHud(e: entity, rotate: vector, t: integer=0, dir: direction=left):
+    add 180 to y of {_rotate} if {_e} is text display
+    if {_dir} is right:
+        set right rotation of {_e} to vecToQuat({_rotate})
+    else:
+        set left rotation of {_e} to vecToQuat({_rotate})
+    set interpolation delay of {_e} to 0 tick
+    set interpolation duration of {_e} to "%{_t}% tick" parsed as timespan
+
+function vecToQuat(v: vector):: quaternion:
+    return quaternion(1,0,0,0) rotated by x (x of {_v}), y (y of {_v}), z (z of {_v})
+
+
+
+
+
+function getHudScale(p: entity, id: string):: vector:
+    return getHudScale(getHud({_p}, {_id}))
+
+function getHudScale(e: entity):: vector:
+    return metadata tag "scale" of {_e}
+
+function getHudLocation(p: entity, id: string):: vector:
+    return getHudLocation(getHud({_p}, {_id}))
+function getHudLocation(e: entity):: vector:
+    return metadata tag "location" of {_e}
+
+function getHud(p: entity, id: string):: entity:
+    return metadata tag "{@id}%{_id}%" of {_p}
+
+function getHuds(p: entity, ids: strings):: entities:
+    loop {_ids::*}:
+        add getHud({_p}, loop-value) to {_return::*}
+    return {_return::*}
+
+function getAllHuds(p: entity, id: boolean=false):: objects:
+    set {_list::*} to {_p}'s passengers where [input has metadata tag "hud"]
+    return {_list::*} if {_id} is false
+    loop {_list::*}:
+        add metadata tag "id" of loop-value to {_return::*}
+    return {_return::*}
+
+function removeHud(p: entity, ids: strings):
+    removeHud(getHuds({_p}, {_ids::*}))
+function removeHud(e: entities):
+    loop {_e::*}:
+        delete metadata tag "{@id}%metadata tag "id" of loop-value%" of (loop-value's vehicle)
+        kill loop-value
+
+function clearHuds(p: entity):
+    removeHud(getAllHuds({_p}))
+
+on dismount:
+    metadata tag "hud" of event-entity is true
+    removeHud(event-entity)
+on join:
+    loop all players where [input is not player]:
+        loop getAllHuds(loop-value):
+            hide loop-value-2 from player
