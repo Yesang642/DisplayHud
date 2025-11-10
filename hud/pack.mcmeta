@@ -1,0 +1,17 @@
+{
+    "pack": {
+        "pack_format": 15,
+        "supported_formats": [15, 99],
+        "description": "hud"
+    },
+    "overlays":{
+        "entries":[
+            {
+                "formats": [
+                46,55
+                ],
+                "directory": "hud_legacy"
+            }
+        ]
+    }
+}
