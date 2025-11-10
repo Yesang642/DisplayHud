@@ -97,11 +97,13 @@ function setHudScale(p: entity, id: string, scale: vector, t: integer=0, isCente
     setHudScale(getHud({_p}, {_id}), {_scale}, integer in {_t}, {_isCenter})
 function setHudScale(e: entity, scale: vector, t: integer=0, isCenter: boolean=false):
     set {_originalLocation} to getHudLocation({_e})
+    set {_originalScale} to getHudScale({_e})
     set display scale of {_e} to getScaleVector({_scale})
     set metadata tag "scale" of {_e} to {_scale}
     if {_isCenter} is false:
         moveHud({_e}, {_originalLocation}, integer in {_t})
     else:
+        set metadata tag "location" of {_e} to ({_originalScale} - {_scale})/2 + {_originalLocation}
         set interpolation delay of {_e} to 0 tick
         set interpolation duration of {_e} to "%{_t}% tick" parsed as timespan
 
@@ -204,3 +206,4 @@ on join:
     loop all players where [input is not player]:
         loop getAllHuds(loop-value):
             hide loop-value-2 from player
+
