@@ -142,6 +142,7 @@ function setHudText(e: entity, text: string, line: integer={_}):
         moveHud({_e}, getHudLocation({_e})) if {_over} is true
     else:
         set text of {_e} to "%" " repeated (line width of {_e}) times%%nl%%{_text}%"
+        moveHud({_e}, getHudLocation({_e}))
 
 
 
@@ -206,4 +207,5 @@ on join:
     loop all players where [input is not player]:
         loop getAllHuds(loop-value):
             hide loop-value-2 from player
+
 
