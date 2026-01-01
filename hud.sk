@@ -146,7 +146,7 @@ function setHudText(e: entity, text: string, line: integer={_}):
 
 
 
-function rotateHud(p: entity, id: string, rotate: vector, t: integer=0, dir: direction=right):
+function rotateHud(p: entity, id: string, rotate: vector, t: integer=0, dir: direction=left):
     rotateHud(getHud({_p}, {_id}), {_rotate}, integer in {_t}, {_dir})
 function rotateHud(e: entity, rotate: vector, t: integer=0, dir: direction=left):
     add 180 to y of {_rotate} if {_e} is text display
@@ -207,6 +207,7 @@ on join:
     loop all players where [input is not player]:
         loop getAllHuds(loop-value):
             hide loop-value-2 from player
+
 
 
 
