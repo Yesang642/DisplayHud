@@ -50,10 +50,10 @@ function getLocationVector(v: vector, scale: vector=vector(0,0,0), e: entity={_}
     if {_e} is text display:
         set {_text} to text of {_e}
         set {_alignemnt} to text alignment of {_e}
-        remove {_scale}.y/2 from {_offset.y}
-        add ({_scale}.y/4) * ((size of ({_text} split at nl))-1) to {_offset.y}
-        set {_offset.x} to ({_scale}.x)*(((line width of {_e})*0.0125) - 0.5) if {_alignemnt} is left aligned
-        set {_offset.x} to ({_scale}.x)*(((line width of {_e})*-0.0125) - 0.55) if {_alignemnt} is right aligned
+        remove (y of {_scale})/2 from {_offset.y}
+        add ((y of {_scale})/4) * ((size of ({_text} split at nl))-1) to {_offset.y}
+        set {_offset.x} to (x of {_scale})*(((line width of {_e})*0.0125) - 0.5) if {_alignemnt} is left aligned
+        set {_offset.x} to (x of {_scale})*(((line width of {_e})*-0.0125) - 0.55) if {_alignemnt} is right aligned
         set x of {_scale} to 0 if {_alignemnt} is center aligned
     else if item of {_e} is block:
         set {_offset.z} to (z of {_scale})/2
@@ -207,6 +207,7 @@ on join:
     loop all players where [input is not player]:
         loop getAllHuds(loop-value):
             hide loop-value-2 from player
+
 
 
 
